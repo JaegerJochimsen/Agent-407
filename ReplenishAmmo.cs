@@ -11,7 +11,6 @@ public class ReplenishAmmo : MonoBehaviour
         if ((((transform.position - player.transform.position).z <= 1f && (transform.position - player.transform.position).x <= 1f)) && gunScript.bullets < 100)
         {
             gunScript.bullets = 100;
-            Debug.Log("bullets: " + gunScript.bullets);
 
             // destroy pickup
             Destroy(gameObject);
