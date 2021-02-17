@@ -4,12 +4,6 @@ using UnityEngine.AI;
 
 public class enemyAI : MonoBehaviour
 {
-    /*
-     * make damage tick off of proximity;
-     * set bool to false when attacked, then reset when knocked back (out of attack range)
-     * try not baking environ -- may also be the "is kinematic" option (may move through world though) -- can implement own physics (ray down for dist measuring)
-     * 
-     */
     public CharacterController controller;
     public NavMeshAgent agent;
     public Transform player;
