@@ -5,6 +5,8 @@ public class RestoreHealth : MonoBehaviour
     public CharacterController player;
     public float healthRestore = 50f;
 
+    public healthBar healthBar;
+
     // Update is called once per frame
     void Update()
     {
@@ -21,6 +23,8 @@ public class RestoreHealth : MonoBehaviour
             {
                 MovePlayer.health += healthRestore;
             }
+
+            healthBar.SetHealth(MovePlayer.health);
 
             // destroy pickup
             Destroy(gameObject);
