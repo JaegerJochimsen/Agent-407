@@ -8,23 +8,16 @@ public class MovePlayer : MonoBehaviour
 {
     public CharacterController controller;
 
-    public float grav = -9.81f;
+    static public float grav = -9.81f * 4.5f;
     public float jumpHeight = 3f;
 
     public Transform groundCheck;
     public float groundDistance = 0.4f;
     public LayerMask groundMask;
 
-    public Transform enemyAttackCheck;
-    public float enemyDistance = 1f;
-    public LayerMask enemyMask;
-    public float enemyDamage = 20f;
+    static public bool inAirKnock;
 
-    float knockBack = 4f;
-    float knockUp = 1.5f;
-    bool inAirKnock;
-
-    Vector3 velocity;
+    static public Vector3 velocity;
     bool isGrounded;
 
     static public float health = 100f;
@@ -32,9 +25,10 @@ public class MovePlayer : MonoBehaviour
     float speed = 12f;
     float runningBoost = 24f;
     bool sprinting;
-    bool enemyAttacking;
-    bool stamCharged;
-    public float timer = 5;
+    bool stamCharged = true;
+    public float timer = -1;
+
+    public staminaBar staminaBar;
 
     // Update is called once per frame
     void Update()
@@ -45,9 +39,6 @@ public class MovePlayer : MonoBehaviour
         // set boolean to know when the player is on the ground (uses groundCheck)
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, groundMask);
 
-        // set boolean to know if an enemy is within attack range 
-        enemyAttacking = Physics.CheckSphere(enemyAttackCheck.position, enemyDistance, enemyMask);
-
         // if player is on the ground, coming down from the air, stop excess acceleration left from in-air acceleration
         SettlePosition();
     
@@ -56,12 +47,6 @@ public class MovePlayer : MonoBehaviour
 
         // if player is on the ground and LShift is pressed down, then they are sprinting
         Sprint();
-
-        // If the enemy is attacking then reduce health and knock back
-        if (enemyAttacking)
-        {
-            BeAttacked();
-        }
 
         Move();
     }
@@ -105,6 +90,7 @@ public class MovePlayer : MonoBehaviour
         {
             // calculate jump velocity based off of jump height and gravity
             velocity.y += Mathf.Sqrt(jumpHeight * (-2f) * grav);
+
         }
 
         // part of the grav^2; move the player
@@ -128,9 +114,11 @@ public class MovePlayer : MonoBehaviour
         {
             stamCharged = false;
             speed = 12f;
-            timer = 5f;
+            timer = 4.75f;
         }
-        timer -= Time.deltaTime;
+
+        if(timer >= 0)
+            timer -= Time.deltaTime;
     }
 
     void Sprint()
@@ -150,7 +138,8 @@ public class MovePlayer : MonoBehaviour
         if (sprinting && (stamina > 0) && stamCharged && (timer < 0))
         {
             // decrease stamina by some propotion each frame they are sprinting
-            stamina -= 25f * Time.deltaTime;
+            stamina -= 15f * Time.deltaTime;
+            staminaBar.SetStamina(stamina);
 
             // once they hit max speed then don't get faster
             if (speed < (24 - runningBoost * Time.deltaTime))
@@ -164,47 +153,14 @@ public class MovePlayer : MonoBehaviour
         else if (stamina < 99)
         {
             // recharge stamina
-            stamina += 30f * Time.deltaTime;
+            stamina += 25f * Time.deltaTime;
+            staminaBar.SetStamina(stamina);
 
             // if they are not yet back to base movement speed, decrease
             if (speed > (12 + runningBoost * Time.deltaTime))
             {
                 speed -= runningBoost * Time.deltaTime;
             }
-        }
-    }
-
-    ///////////////////////////////////////////////
-    ///               Enemy Attack              ///
-    ///////////////////////////////////////////////
-
-    void BeAttacked()
-    {
-        //Find all the enemies and determine which are close enough to be contacting:
-        foreach (var gameObj in FindObjectsOfType(typeof(GameObject)) as GameObject[])
-        {
-            // if we find an enemy that IS within striking distance and is attacking, then we will apply damage and knockback
-            if (gameObj.name == "Enemy" && (((gameObj.transform.position - controller.transform.position).z <= 1f && (gameObj.transform.position - controller.transform.position).x <= 1f)))
-            {
-                velocity.x += enemyAI.dir.x* knockBack;
-                velocity.z += enemyAI.dir.z* knockBack;
-                velocity.y += Mathf.Sqrt(knockUp* (-2f) * grav);
-                velocity.y += grav* Time.deltaTime;
-                controller.Move(velocity* Time.deltaTime);
-                // set bool so that when we land we can stop moving back
-                inAirKnock = true;
-            }
-        }
-
-
-        // if we have health left then subtract from it, else we die (IMPLEMENT PLAYER DEATH FUNCT AND SCREEN)
-        if (health > enemyDamage)
-        {
-            health -= enemyDamage;
-        }
-        else
-        {
-            health = 0;
         }
     }
 }
